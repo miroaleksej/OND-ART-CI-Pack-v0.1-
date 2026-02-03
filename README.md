@@ -130,10 +130,13 @@ Treat as research background for future methodology refinement.
 - `REQUIRE_DISCLAIMER`: if `1`, require `Diagnostic only; no security claim.` in `notes` (default `0`)
 
 ## Release versioning
-
 Package version lives in `pyproject.toml` and is mirrored in `ond_art_ci_pack/__init__.py`.  
 Update both in lockstep for releases.
 
 ## Licensing
+
+This package is distributed under the MIT License — see `LICENSE`.
+#ONDART #CI #JSONSchema #GitHubActions #Python #Validation #Diagnostics #Cryptography #RNG #RandomnessAudit
+ond-art, json-schema, github-actions, ci, python, validation, cryptography, rng, audit.
 
 This package is distributed under the MIT License — see `LICENSE`.
