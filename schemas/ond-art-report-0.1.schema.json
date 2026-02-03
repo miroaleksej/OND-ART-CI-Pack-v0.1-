@@ -1,0 +1,683 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ond-art.example/schemas/ond-art-report-0.1.schema.json",
+  "title": "OND-ART Machine Report Schema v0.1",
+  "type": "object",
+  "required": [
+    "spec",
+    "run",
+    "context",
+    "data",
+    "pi",
+    "bootstrap",
+    "metrics",
+    "baseline",
+    "notes"
+  ],
+  "properties": {
+    "spec": {
+      "type": "object",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "const": "OND-ART"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^0\\.1(\\.\\d+)?$",
+          "description": "OND-ART spec version. Allows '0.1' or patch versions like '0.1.0'."
+        },
+        "profile": {
+          "type": "string",
+          "enum": [
+            "core",
+            "recommended",
+            "dev"
+          ],
+          "description": "Optional conformance profile hint for CI pipelines. Not required by v0.1; useful for gating."
+        }
+      },
+      "patternProperties": {
+        "^x-": {}
+      },
+      "additionalProperties": false
+    },
+    "run": {
+      "type": "object",
+      "required": [
+        "run_id",
+        "created_at",
+        "timezone"
+      ],
+      "properties": {
+        "run_id": {
+          "$ref": "#/$defs/id_string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/date_time"
+        },
+        "timezone": {
+          "$ref": "#/$defs/iana_timezone"
+        }
+      },
+      "patternProperties": {
+        "^x-": {}
+      },
+      "additionalProperties": false
+    },
+    "context": {
+      "type": "object",
+      "required": [
+        "protocol",
+        "scheme",
+        "params",
+        "public_context_hash"
+      ],
+      "properties": {
+        "protocol": {
+          "$ref": "#/$defs/id_string",
+          "description": "E.g., 'signature', 'handshake', 'custom'."
+        },
+        "scheme": {
+          "$ref": "#/$defs/id_string",
+          "description": "E.g., 'ECDSA-P256', 'Ed25519', 'ML-DSA'."
+        },
+        "params": {
+          "type": "object",
+          "description": "Scheme/protocol parameters (algorithm-specific).",
+          "properties": {
+            "hash": {
+              "$ref": "#/$defs/id_string",
+              "description": "Hash function identifier, e.g., 'SHA-256'."
+            }
+          },
+          "additionalProperties": true
+        },
+        "public_context_hash": {
+          "$ref": "#/$defs/hash_string"
+        }
+      },
+      "patternProperties": {
+        "^x-": {}
+      },
+      "additionalProperties": false
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "N",
+        "order",
+        "message_policy",
+        "invalid_count"
+      ],
+      "properties": {
+        "N": {
+          "type": "integer",
+          "minimum": 2,
+          "description": "Number of artifacts/observations in this run. v0.1 Core Conformance recommends N>=10000; Recommended conformance N>=100000. Use spec.profile to enforce in CI."
+        },
+        "order": {
+          "type": "string",
+          "enum": [
+            "time",
+            "generation_index",
+            "custom"
+          ],
+          "description": "Ordering semantics for the sequence."
+        },
+        "message_policy": {
+          "$ref": "#/$defs/id_string",
+          "description": "E.g., 'fixed-set-v1', 'random-seeded-v2', 'production-sample'."
+        },
+        "invalid_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of artifacts excluded due to parsing/verification errors."
+        }
+      },
+      "patternProperties": {
+        "^x-": {}
+      },
+      "additionalProperties": false
+    },
+    "pi": {
+      "type": "object",
+      "required": [
+        "pi_id",
+        "pi_version",
+        "pi_spec_hash",
+        "obs_space"
+      ],
+      "properties": {
+        "pi_id": {
+          "$ref": "#/$defs/id_string"
+        },
+        "pi_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z\\.-]+)?$",
+          "description": "Semantic version of the observation mapping definition, e.g., '1.0.0'."
+        },
+        "pi_spec_hash": {
+          "$ref": "#/$defs/hash_string"
+        },
+        "obs_space": {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "$ref": "#/$defs/id_string"
+            },
+            "d": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "modulus": {
+              "type": "integer",
+              "minimum": 2
+            }
+          },
+          "patternProperties": {
+            "^x-": {}
+          },
+          "additionalProperties": true,
+          "description": "Observation space description. Additional fields are allowed for scheme-specific spaces.",
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "R^d"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "required": [
+                  "d"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "Z_mod_m"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "required": [
+                  "modulus"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "patternProperties": {
+        "^x-": {}
+      },
+      "additionalProperties": false
+    },
+    "bootstrap": {
+      "type": "object",
+      "required": [
+        "B",
+        "method",
+        "unit",
+        "block_length"
+      ],
+      "properties": {
+        "B": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of bootstrap replicates. v0.1 Core Conformance requires B>=200; recommended B>=1000 for regression/baselines. Use spec.profile to enforce in CI."
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "percentile",
+            "bca",
+            "basic",
+            "studentized",
+            "custom"
+          ],
+          "description": "Bootstrap CI method."
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "U",
+            "Delta",
+            "custom"
+          ],
+          "description": "Resampling unit: U (observations) or Delta (increments)."
+        },
+        "block_length": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Block length for block-bootstrap; 0 means i.i.d. bootstrap."
+        }
+      },
+      "patternProperties": {
+        "^x-": {}
+      },
+      "additionalProperties": false
+    },
+    "metrics": {
+      "type": "object",
+      "required": [
+        "rank",
+        "subspace",
+        "branching"
+      ],
+      "properties": {
+        "rank": {
+          "type": "object",
+          "required": [
+            "H",
+            "rho",
+            "ci95",
+            "svd_settings"
+          ],
+          "properties": {
+            "H": {
+              "$ref": "#/$defs/nonneg_number",
+              "description": "Rank-entropy (natural log)."
+            },
+            "rho": {
+              "$ref": "#/$defs/number_0_1",
+              "description": "Normalized rank-entropy in [0,1]."
+            },
+            "ci95": {
+              "$ref": "#/$defs/ci95_0_1",
+              "description": "95% CI for rho (default v0.1)."
+            },
+            "svd_settings": {
+              "type": "object",
+              "properties": {
+                "eps": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Numerical stability threshold (optional)."
+                }
+              },
+              "patternProperties": {
+                "^x-": {}
+              },
+              "additionalProperties": true
+            }
+          },
+          "patternProperties": {
+            "^x-": {}
+          },
+          "additionalProperties": false
+        },
+        "subspace": {
+          "type": "object",
+          "required": [
+            "H",
+            "rho",
+            "ci95",
+            "binning"
+          ],
+          "properties": {
+            "H": {
+              "$ref": "#/$defs/nonneg_number",
+              "description": "Subspace occupancy entropy (natural log)."
+            },
+            "rho": {
+              "$ref": "#/$defs/number_0_1",
+              "description": "Normalized subspace occupancy entropy in [0,1]."
+            },
+            "ci95": {
+              "$ref": "#/$defs/ci95_0_1",
+              "description": "95% CI for rho (default v0.1)."
+            },
+            "binning": {
+              "type": "object",
+              "required": [
+                "b",
+                "M_occ"
+              ],
+              "properties": {
+                "b": {
+                  "type": "integer",
+                  "minimum": 2,
+                  "description": "Bins per coordinate (after projection)."
+                },
+                "M_occ": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Number of occupied bins."
+                },
+                "epsilon": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "description": "Optional bin scale if epsilon-binning is used."
+                }
+              },
+              "patternProperties": {
+                "^x-": {}
+              },
+              "additionalProperties": true
+            }
+          },
+          "patternProperties": {
+            "^x-": {}
+          },
+          "additionalProperties": false
+        },
+        "branching": {
+          "type": "object",
+          "required": [
+            "H",
+            "ci95",
+            "clustering"
+          ],
+          "properties": {
+            "H": {
+              "$ref": "#/$defs/nonneg_number",
+              "description": "Branching entropy (natural log)."
+            },
+            "ci95": {
+              "$ref": "#/$defs/ci95_nonneg",
+              "description": "95% CI for H."
+            },
+            "clustering": {
+              "type": "object",
+              "required": [
+                "method",
+                "K",
+                "seed"
+              ],
+              "properties": {
+                "method": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "K": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "seed": {
+                  "type": "integer"
+                }
+              },
+              "patternProperties": {
+                "^x-": {}
+              },
+              "additionalProperties": true
+            }
+          },
+          "patternProperties": {
+            "^x-": {}
+          },
+          "additionalProperties": false
+        }
+      },
+      "patternProperties": {
+        "^x-": {}
+      },
+      "additionalProperties": false
+    },
+    "baseline": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "baseline_id",
+            "distance",
+            "distance_ci95",
+            "classification",
+            "thresholds"
+          ],
+          "properties": {
+            "baseline_id": {
+              "$ref": "#/$defs/id_string"
+            },
+            "distance": {
+              "$ref": "#/$defs/nonneg_number"
+            },
+            "distance_ci95": {
+              "$ref": "#/$defs/ci95_nonneg"
+            },
+            "classification": {
+              "type": "string",
+              "enum": [
+                "Within Baseline Envelope",
+                "Deviating",
+                "Strong Deviation"
+              ]
+            },
+            "thresholds": {
+              "type": "object",
+              "required": [
+                "green",
+                "yellow",
+                "red"
+              ],
+              "properties": {
+                "green": {
+                  "$ref": "#/$defs/nonneg_number"
+                },
+                "yellow": {
+                  "$ref": "#/$defs/nonneg_number"
+                },
+                "red": {
+                  "$ref": "#/$defs/nonneg_number"
+                }
+              },
+              "patternProperties": {
+                "^x-": {}
+              },
+              "additionalProperties": false
+            }
+          },
+          "patternProperties": {
+            "^x-": {}
+          },
+          "additionalProperties": false
+        }
+      ],
+      "description": "Baseline comparison block. Null if not performed."
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Free-form diagnostic notes. Include 'Diagnostic only; no security claim.' as standard language."
+    }
+  },
+  "patternProperties": {
+    "^x-": {}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id_string": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hash_string": {
+      "type": "string",
+      "minLength": 8,
+      "description": "Hash or fingerprint string. Recommended: hex/base64. Schema only enforces minimal length."
+    },
+    "date_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "iana_timezone": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_\\-+]+(?:/[A-Za-z0-9_\\-+]+)+$",
+      "description": "IANA timezone name, e.g., 'America/New_York'."
+    },
+    "nonneg_number": {
+      "type": "number",
+      "minimum": 0
+    },
+    "number_0_1": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "ci95_0_1": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/number_0_1"
+        },
+        {
+          "$ref": "#/$defs/number_0_1"
+        }
+      ],
+      "items": false,
+      "description": "Two-element [low, high] CI array with values in [0,1]."
+    },
+    "ci95_nonneg": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/nonneg_number"
+        },
+        {
+          "$ref": "#/$defs/nonneg_number"
+        }
+      ],
+      "items": false,
+      "description": "Two-element [low, high] CI array with non-negative values."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "context": {
+            "properties": {
+              "scheme": {
+                "const": "ECDSA-P256"
+              }
+            },
+            "required": [
+              "scheme"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "context": {
+            "properties": {
+              "params": {
+                "required": [
+                  "hash"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "spec": {
+            "properties": {
+              "profile": {
+                "const": "recommended"
+              }
+            },
+            "required": [
+              "profile"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "data": {
+            "properties": {
+              "N": {
+                "minimum": 100000
+              }
+            }
+          },
+          "bootstrap": {
+            "properties": {
+              "B": {
+                "minimum": 1000
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "anyOf": [
+          {
+            "properties": {
+              "spec": {
+                "not": {
+                  "required": [
+                    "profile"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "properties": {
+              "spec": {
+                "properties": {
+                  "profile": {
+                    "const": "core"
+                  }
+                },
+                "required": [
+                  "profile"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "then": {
+        "properties": {
+          "data": {
+            "properties": {
+              "N": {
+                "minimum": 10000
+              }
+            }
+          },
+          "bootstrap": {
+            "properties": {
+              "B": {
+                "minimum": 200
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

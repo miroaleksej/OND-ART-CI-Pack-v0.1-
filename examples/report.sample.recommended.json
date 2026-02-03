@@ -1,0 +1,95 @@
+{
+  "spec": {
+    "name": "OND-ART",
+    "version": "0.1",
+    "profile": "recommended"
+  },
+  "run": {
+    "run_id": "2026-02-03T12:00:00+00:00#demo-recommended",
+    "created_at": "2026-02-03T12:00:00+00:00",
+    "timezone": "America/New_York"
+  },
+  "context": {
+    "protocol": "signature",
+    "scheme": "ECDSA-P256",
+    "params": {
+      "hash": "SHA-256"
+    },
+    "public_context_hash": "sha256:deadbeef"
+  },
+  "data": {
+    "N": 100000,
+    "order": "generation_index",
+    "message_policy": "fixed-set-v1",
+    "invalid_count": 0
+  },
+  "pi": {
+    "pi_id": "ecdsa-ur-uz-v1",
+    "pi_version": "1.0.0",
+    "pi_spec_hash": "sha256:cafebabe",
+    "obs_space": {
+      "type": "R^d",
+      "d": 2
+    }
+  },
+  "bootstrap": {
+    "B": 1000,
+    "method": "percentile",
+    "unit": "U",
+    "block_length": 0
+  },
+  "metrics": {
+    "rank": {
+      "H": 0.65,
+      "rho": 0.94,
+      "ci95": [
+        0.92,
+        0.95
+      ],
+      "svd_settings": {
+        "eps": 1e-12
+      }
+    },
+    "subspace": {
+      "H": 5.1,
+      "rho": 0.71,
+      "ci95": [
+        0.68,
+        0.74
+      ],
+      "binning": {
+        "b": 8,
+        "M_occ": 512
+      }
+    },
+    "branching": {
+      "H": 1.85,
+      "ci95": [
+        1.78,
+        1.92
+      ],
+      "clustering": {
+        "method": "kmeans",
+        "K": 316,
+        "seed": 0
+      }
+    }
+  },
+  "baseline": {
+    "baseline_id": "release-1.2.3",
+    "distance": 0.2,
+    "distance_ci95": [
+      0.18,
+      0.22
+    ],
+    "classification": "Deviating",
+    "thresholds": {
+      "green": 0.18,
+      "yellow": 0.24,
+      "red": 0.35
+    }
+  },
+  "notes": [
+    "Diagnostic only; no security claim."
+  ]
+}
